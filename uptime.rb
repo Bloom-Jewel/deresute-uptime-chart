@@ -43,7 +43,6 @@ class BloomJewel::SkillUptime
     @cards.each(&:skill!)
   end
   def draw(length,songname)
-    p [songname]
     length = [[length.to_f,20.0].max,180.0].min
     cw,ch = 1366,560
     
@@ -70,6 +69,14 @@ class BloomJewel::SkillUptime
         AR: [:CU,:HP],
         SYN:[:SU,:CU,:HP],
       }
+      #skn = {
+      #  OL:
+      #}
+      canvas.stroke('none')
+      canvas.fill('black')
+      canvas.text_align(2)
+      canvas.text(cw >> 1,ry - 8,"Uptime Chart for #{songname}")
+      #
       {
         SU: '#FF8040',
         CU: '#EEFF60',
@@ -114,6 +121,7 @@ class BloomJewel::SkillUptime
             canvas.rectangle(x1,y1,x2,y2)
           end
         }
+        canvas.text_align(Magick::RightAlign)
         @cards.each do |card|
           colors = getc.call(card.skill)
           card.interval.step(length,card.interval) do |utime|
@@ -125,6 +133,11 @@ class BloomJewel::SkillUptime
             x1,x2 = rcx.call(utime,card.uptime)
             dskill.call(colors,cardi,cardn,x1,x2,12,ry,rh-ry)
           end
+          # draw text here
+          y2 = (ry + Rational(cardi,cardn) * (rh-ry)).round
+          canvas.stroke('none')
+          canvas.fill('black')
+          canvas.text(rx-8,y2+4,"%s (%s)"%[card.name,card.skill])
           cardi += 1
         end
         # -- UPSKILL / OVERALL SKILL UPTIME
@@ -158,6 +171,11 @@ class BloomJewel::SkillUptime
             x1,x2 = rcx.call(u1,u2-u1)
             dskill.call(colors,cardi,cardn,x1,x2,cws,rh - cws,cwh)
           end
+          # draw text here
+          canvas.stroke('none')
+          canvas.fill('black')
+          y2 = ((rh - cws) + Rational(cardi,cardn) * (cwh)).round
+          canvas.text(rx-8,y2+4,"%s"%[skill])
           cardi += 1
         end
       end
@@ -183,7 +201,7 @@ class BloomJewel::SkillUptime
     
     canvas.draw(img)
     ctime = [Time.now.to_f].pack('G').unpack('h*').first
-    ctime = '0000000000000000'
+    ctime = '0000000000000000' if ENV.key?('DEBUG')
     cfn = 'results/%s.png'%[ctime]
     img.write(cfn)
     puts JSON.dump({'file':cfn})
