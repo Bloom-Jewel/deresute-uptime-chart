@@ -10,7 +10,7 @@ LiveCard = Struct.new(:id,:interval,:base_uptime,:level,:skill,:name)
 class LiveCard
   SKILL_TABLE = {
     SU: [1,2,3],
-    CU: [4,25],
+    CU: [4],
     PL: [5,6,7,8],
     CG: [9,10,11],
     DG: [12],
@@ -22,6 +22,7 @@ class LiveCard
     SB: [20],
     FC: [21,22,23],
     AR: [24],
+    SL: [25],
     SYN:[26],
   }
   def skill!
@@ -67,6 +68,7 @@ class BloomJewel::SkillUptime
         CC: [:SU],
         FC: [:SU,:CU],
         AR: [:CU,:HP],
+        SL: [:CU],
         SYN:[:SU,:CU,:HP],
       }
       #skn = {
@@ -94,6 +96,7 @@ class BloomJewel::SkillUptime
         
         FC: [:SU,:CU],
         AR: [:CU,:HP],
+        SL: [:CU],
         SYN:[:SU,:CU,:HP],
       }.tap do |skills|
         cardi = 1
@@ -123,21 +126,30 @@ class BloomJewel::SkillUptime
         }
         canvas.text_align(Magick::RightAlign)
         @cards.each do |card|
-          colors = getc.call(card.skill)
+          colors    = getc.call(card.skill)
+          rup_song  = 0.0
+          rup_combo = 0
           card.interval.step(length,card.interval) do |utime|
             next if utime > @notes.max
+            up_max     = [card.uptime,card.interval,length - utime].min
+            rup_song  += Rational(up_max,length) * 100
+            rup_combo += @notes.count { |t| t.between?(utime,utime + up_max) }
             skc.fetch(card.skill,[card.skill]).each do |skpure|
               ss[skpure] ||= []
               ss[skpure] << [utime,utime + card.uptime]
             end
-            x1,x2 = rcx.call(utime,card.uptime)
+            x1,x2 = rcx.call(utime,up_max)
             dskill.call(colors,cardi,cardn,x1,x2,12,ry,rh-ry)
           end
+          rup_note  = Rational(rup_combo, @notes.size) * 100
           # draw text here
           y2 = (ry + Rational(cardi,cardn) * (rh-ry)).round
           canvas.stroke('none')
           canvas.fill('black')
-          canvas.text(rx-8,y2+4,"%s (%s)"%[card.name,card.skill])
+          canvas.font_size(12)
+          canvas.text(rx-2,y2-4,"%s (%s)"%[card.name,card.skill])
+          canvas.font_size( 9)
+          canvas.text(rx-2,y2+4,"%.1f%% notes\n%.1f%% song\n%d notes"%[rup_note,rup_song,rup_combo])
           cardi += 1
         end
         # -- UPSKILL / OVERALL SKILL UPTIME
@@ -167,15 +179,27 @@ class BloomJewel::SkillUptime
         cws = Rational(cwh,2 * ss.size)
         ss.each do |skill,suptimes|
           colors = getc.call(skill)
+          rup_song  = 0.0
+          rup_combo = 0
           suptimes.each do |u1,u2|
+            rup_song  += Rational([u2,length].min-u1,length) * 100
+            rup_combo += @notes.count { |t| t.between?(u1,u2) }
             x1,x2 = rcx.call(u1,u2-u1)
             dskill.call(colors,cardi,cardn,x1,x2,cws,rh - cws,cwh)
           end
+          rup_note = Rational(rup_combo, @notes.size) * 100
           # draw text here
+          y2 = ((rh - cws) + Rational(cardi,cardn) * (cwh)).round
           canvas.stroke('none')
           canvas.fill('black')
-          y2 = ((rh - cws) + Rational(cardi,cardn) * (cwh)).round
-          canvas.text(rx-8,y2+4,"%s"%[skill])
+          canvas.font_size(12)
+          canvas.text(rx-2,y2+4,"%s"%[skill])
+          canvas.font_size( 9)
+          if ss.size >= 5 then
+            canvas.text(rx-(2 + skill.to_s.size * 10),y2+4,"%.1f%%/%.1f%%/%d"%[rup_note,rup_song,rup_combo])
+          else
+            canvas.text(rx-(2 + skill.to_s.size * 10),y2+0,"%.1f%%/%.1f%%\n%d"%[rup_note,rup_song,rup_combo])
+          end
           cardi += 1
         end
       end
