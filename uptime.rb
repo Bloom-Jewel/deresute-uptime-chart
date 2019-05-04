@@ -20,10 +20,13 @@ class LiveCard
     MM: [16],
     HP: [17,18,19],
     SB: [20],
-    FC: [21,22,23],
+    FOC:[21,22,23],
     AR: [24],
     SL: [25],
     SYN:[26],
+    CRD:[27],
+    AC: [28,29,30],
+    TUN:[31],
   }
   def skill!
     SKILL_TABLE.each do |skill, ids|
@@ -66,10 +69,13 @@ class BloomJewel::SkillUptime
       skc = {
         OL: [:SU,:CG],
         CC: [:SU],
-        FC: [:SU,:CU],
+        FOC:[:SU,:CU],
         AR: [:CU,:HP],
         SL: [:CU],
         SYN:[:SU,:CU,:HP],
+        CRD:[:SU,:CU],
+        AC: [:SU],
+        TUN:[:CU,:PL],
       }
       #skn = {
       #  OL:
@@ -94,10 +100,14 @@ class BloomJewel::SkillUptime
         OL: [:SU,:CG],
         CC: '#7710BB',
         
-        FC: [:SU,:CU],
+        FOC:[:SU,:CU],
         AR: [:CU,:HP],
         SL: [:CU],
         SYN:[:SU,:CU,:HP],
+        CRD:[:SU,:CU],
+        
+        AC: [:SU],
+        TUN:[:CU,:PL],
       }.tap do |skills|
         cardi = 1
         cardn = @cards.size + 1
