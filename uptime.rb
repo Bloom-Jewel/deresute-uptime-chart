@@ -25,8 +25,10 @@ class LiveCard
     SL: [25],
     SYN:[26],
     CRD:[27],
-    AC: [28,29,30],
+    ACT:[28,29,30],
     TUN:[31],
+    ENS:[32,33,34],
+    MTF:[35,36,37],
   }
   def skill!
     SKILL_TABLE.each do |skill, ids|
@@ -74,8 +76,9 @@ class BloomJewel::SkillUptime
         SL: [:CU],
         SYN:[:SU,:CU,:HP],
         CRD:[:SU,:CU],
-        AC: [:SU],
+        ACT:[:SU],
         TUN:[:CU,:PL],
+        MTF:[:SU],
       }
       #skn = {
       #  OL:
@@ -106,8 +109,10 @@ class BloomJewel::SkillUptime
         SYN:[:SU,:CU,:HP],
         CRD:[:SU,:CU],
         
-        AC: [:SU],
+        ACT:[:SU],
         TUN:[:CU,:PL],
+        ENS:'#ff4444',
+        MTF:[:SU],
       }.tap do |skills|
         cardi = 1
         cardn = @cards.size + 1
@@ -234,7 +239,7 @@ class BloomJewel::SkillUptime
     end
     
     canvas.draw(img)
-    ctime = [Time.now.to_f].pack('G').unpack('h*').first
+    ctime = [Time.now.to_f].pack('G').unpack('H*').first
     ctime = '0000000000000000' if ENV.key?('DEBUG')
     cfn = 'results/%s.png'%[ctime]
     img.write(cfn)
@@ -285,7 +290,7 @@ begin
     when 'f'
       cset, diff = $scin.read(Integer,Integer)
       chart = JSON.parse(File.read(BloomJewel.file(:radar,"s/%03d_%02d.json"%[cset,diff])))
-      notes = chart.select{|t|[1,2,3].include?(t['type'])}.map{|t|t['sec']}
+      notes = chart.select{|t|[1,2,3,4,5,6,7].include?(t['type'])}.map{|t|t['sec']}
       slen  = chart.find{|t|t['type']==92}.fetch('sec')
     else
       combo = $scin.read(Integer)
